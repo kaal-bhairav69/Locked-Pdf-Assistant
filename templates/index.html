@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Assistant</title>
+
+    <!-- KaTeX CSS for Mathematical Formulas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
+<style>
+
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+    }
+
+    body{
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height:100vh;
+        padding:20px;
+        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .main-header{
+        text-align:center;
+        color:white;
+        margin-bottom:30px;
+    }
+
+    .main-header h1{
+        font-size:32px;
+        margin-bottom:5px;
+    }
+
+    .main-header p{
+        font-size:14px;
+        opacity:0.9;
+    }
+
+    .container{
+        max-width:1400px;
+        margin:auto;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:20px;
+    }
+
+    .card{
+        background:white;
+        padding:25px;
+        border-radius:12px;
+        box-shadow:0 10px 40px rgba(0,0,0,0.15);
+    }
+
+    .card h2{
+        margin-bottom:20px;
+        color:#333;
+        font-size:20px;
+        display:flex;
+        align-items:center;
+        gap:8px;
+    }
+
+    label{
+        display:block;
+        margin-bottom:8px;
+        font-size:14px;
+        color:#555;
+        font-weight:500;
+    }
+
+    input[type="file"],
+    input[type="password"],
+    textarea{
+        width:100%;
+        padding:12px;
+        border:1px solid #ddd;
+        border-radius:8px;
+        margin-bottom:15px;
+        font-size:14px;
+        font-family:inherit;
+        transition: all 0.3s;
+    }
+
+    input[type="file"]:focus,
+    input[type="password"]:focus,
+    textarea:focus{
+        outline:none;
+        border-color:#667eea;
+        box-shadow:0 0 8px rgba(102,126,234,0.2);
+    }
+
+    textarea{
+        resize:vertical;
+        min-height:100px;
+    }
+
+    .button-group{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    button{
+        padding:12px 20px;
+        border:none;
+        border-radius:8px;
+        background:#667eea;
+        color:white;
+        cursor:pointer;
+        font-size:14px;
+        font-weight:600;
+        transition: all 0.3s;
+        flex:1;
+        min-width:120px;
+    }
+
+    button:hover{
+        background:#5568d3;
+        transform:translateY(-2px);
+        box-shadow:0 5px 15px rgba(102,126,234,0.3);
+    }
+
+    button.btn-exit{
+        background:#dc2626;
+    }
+
+    button.btn-exit:hover{
+        background:#b91c1c;
+    }
+
+    form{
+        margin-bottom:25px;
+        padding-bottom:25px;
+        border-bottom:1px solid #eee;
+    }
+
+    form:last-child{
+        border-bottom:none;
+    }
+
+    /* Answer Section */
+    .answer-section{
+        height:100%;
+        display:flex;
+        flex-direction:column;
+    }
+
+    .answer-container{
+        flex:1;
+        overflow-y:auto;
+        background:#f9fafb;
+        border:1px solid #e5e7eb;
+        border-radius:8px;
+        padding:20px;
+        margin-bottom:20px;
+    }
+
+    .answer-box{
+        background:white;
+        border-left:4px solid #667eea;
+        padding:20px;
+        border-radius:8px;
+        line-height:1.8;
+        color:#333;
+        word-wrap:break-word;
+        white-space:pre-wrap;
+    }
+
+    .answer-box h3{
+        color:#667eea;
+        font-size:16px;
+        margin-bottom:12px;
+        margin-top:15px;
+    }
+
+    .answer-box h3:first-child{
+        margin-top:0;
+    }
+
+    .answer-box p{
+        margin-bottom:12px;
+    }
+
+    .answer-box ul, .answer-box ol{
+        margin-left:20px;
+        margin-bottom:12px;
+    }
+
+    .answer-box li{
+        margin-bottom:8px;
+    }
+
+    .answer-box code{
+        background:#f0f0f0;
+        padding:2px 6px;
+        border-radius:4px;
+        font-family:'Courier New', monospace;
+        font-size:13px;
+    }
+
+    .status-message{
+        padding:12px 15px;
+        border-radius:8px;
+        margin-bottom:15px;
+        font-size:13px;
+        font-weight:500;
+    }
+
+    .status-success{
+        background:#d1fae5;
+        color:#065f46;
+        border:1px solid #a7f3d0;
+    }
+
+    .status-error{
+        background:#fee2e2;
+        color:#991b1b;
+        border:1px solid #fecaca;
+    }
+
+    .status-info{
+        background:#dbeafe;
+        color:#0c2d6b;
+        border:1px solid #bfdbfe;
+    }
+
+    .empty-state{
+        text-align:center;
+        color:#999;
+        padding:40px 20px;
+        font-style:italic;
+    }
+
+    /* History Section */
+    .history-box{
+        flex:1;
+        overflow-y:auto;
+        background:#f9fafb;
+        border:1px solid #e5e7eb;
+        border-radius:8px;
+        padding:15px;
+    }
+
+    .history-item{
+        margin-bottom:15px;
+        padding:12px;
+        border-left:3px solid #667eea;
+        background:white;
+        border-radius:4px;
+        font-size:13px;
+    }
+
+    .history-label{
+        font-weight:600;
+        margin-bottom:5px;
+        font-size:12px;
+        text-transform:uppercase;
+    }
+
+    .history-user .history-label{
+        color:#667eea;
+    }
+
+    .history-assistant .history-label{
+        color:#764ba2;
+    }
+
+    .history-text{
+        color:#555;
+        line-height:1.5;
+        word-wrap:break-word;
+    }
+
+    .no-history{
+        text-align:center;
+        color:#999;
+        padding:20px;
+        font-style:italic;
+        font-size:13px;
+    }
+
+    @media (max-width:1024px){
+        .container{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width:600px){
+        .main-header h1{
+            font-size:24px;
+        }
+
+        .card{
+            padding:15px;
+        }
+
+        .button-group{
+            flex-direction:column;
+        }
+
+        button{
+            width:100%;
+        }
+    }
+
+</style>
+
+</head>
+<body>
+
+<div class="main-header">
+    <h1>📄 PDF Assistant</h1>
+    <p>Upload your PDF and chat with an AI assistant powered by Groq</p>
+</div>
+
+<div class="container">
+
+    <!-- Left Panel: Upload & Questions -->
+    <div class="card">
+
+        <!-- Upload Section -->
+        <h2>📤 Upload PDF</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+
+            <label>Select PDF File</label>
+            <input type="file" name="pdf_file" accept=".pdf" required>
+
+            <label>Password (if encrypted)</label>
+            <input type="password" name="password" placeholder="Enter PDF password">
+
+            <button type="submit">Upload PDF</button>
+
+        </form>
+
+        <!-- Question Section -->
+        <h2>❓ Ask Question</h2>
+
+        <form method="POST">
+
+            <textarea name="question" placeholder="Ask anything about the PDF...&#10;Example: Summarize this document, What is the main topic?" required></textarea>
+
+            <div class="button-group">
+                <button type="submit">Ask Question</button>
+                <button type="submit" class="btn-exit" onclick="document.querySelector('textarea[name=question]').value='exit'">Exit Chat</button>
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- Right Panel: Answer & History -->
+    <div class="card answer-section">
+
+        <h2>💬 Response</h2>
+
+        <div class="answer-container">
+
+            {% if answer %}
+
+                {% if "pdf uploaded" in answer.lower() %}
+                    <div class="status-message status-success">✓ {{ answer }}</div>
+                {% elif "Chat session ended" in answer %}
+                    <div class="status-message status-info">ℹ️ {{ answer }}</div>
+                {% elif "wrong" in answer.lower() or "error" in answer.lower() %}
+                    <div class="status-message status-error">✗ {{ answer }}</div>
+                {% else %}
+                    <div class="answer-box">{{ answer }}</div>
+                {% endif %}
+
+            {% else %}
+                <div class="empty-state">Upload a PDF to get started</div>
+            {% endif %}
+
+        </div>
+
+        <h2>📝 History</h2>
+
+        <div class="history-box">
+
+            {% if history %}
+
+                {% for item in history %}
+
+                    {% if item.startswith('User:') %}
+                        <div class="history-item history-user">
+                            <div class="history-label">You</div>
+                            <div class="history-text">{{ item.replace('User: ', '') }}</div>
+                        </div>
+                    {% elif item.startswith('Assistant:') %}
+                        <div class="history-item history-assistant">
+                            <div class="history-label">Assistant</div>
+                            <div class="history-text">{{ item.replace('Assistant: ', '') }}</div>
+                        </div>
+                    {% endif %}
+
+                {% endfor %}
+
+            {% else %}
+                <div class="no-history">No conversation history yet</div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // Render math formulas when page loads and after each answer
+    document.addEventListener('DOMContentLoaded', function() {
+        renderMathFormulas();
+    });
+
+    function renderMathFormulas() {
+        const answerBox = document.querySelector('.answer-box');
+        if (answerBox && window.renderMathInElement) {
+            try {
+                renderMathInElement(answerBox, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false
+                });
+            } catch(e) {
+                console.log('Math rendering note:', e);
+            }
+        }
+    }
+
+    // Re-render when form is submitted
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            setTimeout(renderMathFormulas, 500);
+        });
+    });
+</script>
+
+</body>
+</html>

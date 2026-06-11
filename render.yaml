@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: pdf-assistant
+    runtime: python311
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: GROQ_API_KEY
+        scope: run
+        value: your_groq_api_key_here
+      - key: PYTHON_VERSION
+        value: "3.11"
